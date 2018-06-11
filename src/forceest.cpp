@@ -12,7 +12,12 @@
 
 
 Eigen::MatrixXd forceest::dynamics(Eigen::MatrixXd sigma_state){
-
+   std::cout<< "-------------" <<std::endl;
+    std::cout<< "I  " << I<<std::endl;
+    std::cout<< "M  " << M<<std::endl;
+    std::cout<< "L  " << L<<std::endl;
+    std::cout<< "r  " << r<<std::endl;
+    std::cout<< "a  " << I<<std::endl;
     Eigen::MatrixXd predict_sigma_state(this->x_size,this->x_sigmavector_size);
 
     for(int i=0;i<this->x_sigmavector_size;i++){

@@ -55,8 +55,8 @@ ukf::ukf(int state_size , int measurement_size){
   P_yy.setZero(y_size,y_size);
   P_xy.setZero(x_size,y_size);
 
-  x<<0,0;
-  x_hat<<0,0;
+//  x<<0,0;
+//  x_hat<<0,0;
 }
 
 
@@ -111,7 +111,6 @@ void ukf::predict(){
   for(int i=0;i< x_sigmavector_size;i++){
     y_hat += w_m(i) * y_sigmavector.col(i);
   }
-
 }
 
 
@@ -121,6 +120,7 @@ void ukf::correct(Eigen::VectorXd measure){
     y=measure;
 
     P_yy.setZero(y_size,y_size);
+
     P_xy.setZero(x_size,y_size);
 
     for(int i=0;i<x_sigmavector_size;i++){
@@ -135,6 +135,7 @@ void ukf::correct(Eigen::VectorXd measure){
      */
       P_yy += w_c(i) * err * err_t;
     }
+
      //add measurement noise covarinace
 
      P_yy +=R;
@@ -147,13 +148,10 @@ void ukf::correct(Eigen::VectorXd measure){
       err_x = x_sigmavector.col(i) - x_hat;
       P_xy += w_c(i) * err_x * err_y.transpose();
     }
-
+//std::cout<< "y" <<std::endl<<P_xy <<std::endl;
     Kalman_gain = P_xy * (P_yy.inverse());
-
     x = x_hat + Kalman_gain *(y-y_hat);
-
     P = P_ - Kalman_gain*P_yy*(Kalman_gain.transpose());
-
 }
 
 

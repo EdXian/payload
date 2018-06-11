@@ -24,6 +24,8 @@ enum measurement{
     momegap,
     mac_x,
     mac_z,
+    mFF_x,
+    mFF_z,
     measurementsize
 };
 

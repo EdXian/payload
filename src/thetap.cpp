@@ -154,26 +154,30 @@ int main(int argc, char **argv)
 {
   ros::init(argc, argv, "thetap");
   ros::NodeHandle nh;
-  forceest forceest1(statesize,measurementsize);
+
+
+
   ros::Subscriber imu_sub = nh.subscribe("/mavros/imu/data" , 10, imu_cb);
   ros::Subscriber mocap_sub = nh.subscribe("/vrpn_client_node/RigidBody2/pose" , 10 , mocap_cb);
   ros::Rate loop_rate(30);
 
-  Eigen::MatrixXd mnoise;
-  mnoise.setZero(6,6);
-  mnoise   = 3e-3*Eigen::MatrixXd::Identity(measurementsize , measurementsize);
 
+  forceest forceest1(statesize,measurementsize);
+  Eigen::MatrixXd mnoise;
+  mnoise.setZero(measurementsize,measurementsize);
+  mnoise   = 3e-3*Eigen::MatrixXd::Identity(measurementsize , measurementsize);
   forceest1.set_measurement_noise(mnoise);
 
+
+
   Eigen::MatrixXd pnoise;
-  pnoise.setZero(8,8);
+  pnoise.setZero(statesize,statesize);
   pnoise   = 3e-3*Eigen::MatrixXd::Identity(statesize , statesize);
   forceest1.set_process_noise(pnoise);
 
 
-
   Eigen::MatrixXd measurement_matrix;
-  measurement_matrix.setZero(measurementsize,measurementsize);
+  measurement_matrix.setZero(6,8);
   measurement_matrix << 1,0,0,0,0,0,0,0,
                         0,1,0,0,0,0,0,0,
                         0,0,1,0,0,0,0,0,
@@ -189,14 +193,14 @@ int main(int argc, char **argv)
 
     forceest1.predict();
     Eigen::VectorXd measure;
-    measure.setZero(4);
-    measure << theta_p , omega_p ,a_x_I,a_z_I;
+
+    measure.setZero(6);
+    measure << theta_p , omega_p ,a_x_I,a_z_I ,0.1,0.1 ;
+
     forceest1.correct(measure);
-   std::cout<<"-----------"<<std::endl;
 
 
-    std::cout << forceest1.x[0] - theta_p <<std::endl;
-    std::cout << forceest1.x[1] - omega_p<<std::endl;
+    //std::cout<<"---------"<<std::endl<< forceest1.x <<std::endl;
     loop_rate.sleep();
     ros::spinOnce();
 
