@@ -5,15 +5,25 @@
 
 
 
+
+
 enum state{
-    pos=0,
-    velocity,
+    thetap=0,
+    omegap,
+    ac_x,
+    ac_z,
+    FF_x,
+    FF_z,
+    FL_x,
+    FL_z,
     statesize
 };
 
 enum measurement{
-    mpos = 0,
-    mvel,
+    mthetap = 0,
+    momegap,
+    mac_x,
+    mac_z,
     measurementsize
 };
 

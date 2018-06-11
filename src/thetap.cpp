@@ -5,6 +5,9 @@
 #include "geometry_msgs/PoseStamped.h"
 #include <tf/transform_datatypes.h>
 
+
+
+
 sensor_msgs::Imu imu_data;
 double imu_roll , imu_pitch , imu_yaw;
 geometry_msgs::PoseStamped mocap_pose;
@@ -122,7 +125,7 @@ a_I = Q*a_B;
 a_x_I = a_I[0];
 a_y_I = a_I[1];
 a_z_I = a_I[2];
-std::cout <<"acc" <<std::endl<<a_I<<std::endl;
+//std::cout <<"acc" <<std::endl<<a_I<<std::endl;
 
 
 //std::cout<<"yaw err : " << mocap_yaw - imu_yaw<<std::endl;
@@ -157,13 +160,13 @@ int main(int argc, char **argv)
   ros::Rate loop_rate(30);
 
   Eigen::MatrixXd mnoise;
-  mnoise.setZero(2,2);
+  mnoise.setZero(6,6);
   mnoise   = 3e-3*Eigen::MatrixXd::Identity(measurementsize , measurementsize);
 
   forceest1.set_measurement_noise(mnoise);
 
   Eigen::MatrixXd pnoise;
-  pnoise.setZero(2,2);
+  pnoise.setZero(8,8);
   pnoise   = 3e-3*Eigen::MatrixXd::Identity(statesize , statesize);
   forceest1.set_process_noise(pnoise);
 
@@ -171,25 +174,29 @@ int main(int argc, char **argv)
 
   Eigen::MatrixXd measurement_matrix;
   measurement_matrix.setZero(measurementsize,measurementsize);
-  measurement_matrix << 1,0,
-                        0,1;
+  measurement_matrix << 1,0,0,0,0,0,0,0,
+                        0,1,0,0,0,0,0,0,
+                        0,0,1,0,0,0,0,0,
+                        0,0,0,1,0,0,0,0,
+                        0,0,0,0,1,0,0,0,
+                        0,0,0,0,0,1,0,0;
   forceest1.set_measurement_matrix(measurement_matrix);
 
-  forceest1.dt = 0.02;
+  forceest1.dt = 0.033;
 
 
   while(ros::ok()){
 
     forceest1.predict();
     Eigen::VectorXd measure;
-    measure.setZero(2);
-    measure << theta_p , omega_p;
+    measure.setZero(4);
+    measure << theta_p , omega_p ,a_x_I,a_z_I;
     forceest1.correct(measure);
-//    std::cout<<"-----------"<<std::endl;
+   std::cout<<"-----------"<<std::endl;
 
 
-//    std::cout << forceest1.x[0] - theta_p <<std::endl;
-//    std::cout << forceest1.x[1] - omega_p<<std::endl;
+    std::cout << forceest1.x[0] - theta_p <<std::endl;
+    std::cout << forceest1.x[1] - omega_p<<std::endl;
     loop_rate.sleep();
     ros::spinOnce();
 
