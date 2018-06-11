@@ -261,8 +261,8 @@ int main(int argc, char **argv)
 
   ros::Subscriber force_sub = nh.subscribe("/output", 10, force_cb);        //okay
   ros::Subscriber imu_sub = nh.subscribe("/drone1/mavros/imu/data", 10, imu_cb);
-  ros::Subscriber pose_sub = nh.subscribe("/vrpn_client_node/RigidBody2/pose", 10, mocap_cb);  //okay
-  ros::Subscriber marker_sub = nh.subscribe("/vrpn_client_node/RigidBody1/pose", 10, marker_cb);
+  ros::Subscriber pose_sub = nh.subscribe("/vrpn_client_node/RigidBody3/pose", 10, mocap_cb);  //okay
+  ros::Subscriber marker_sub = nh.subscribe("/vrpn_client_node/RigidBody2/pose", 10, marker_cb);
   ros::Subscriber tag_sub =  nh.subscribe("/fiducial_transforms", 10, tag_cb);
 
   ros::Publisher mocap_pub = nh.advertise<geometry_msgs::PoseStamped>("/drone1/mavros/mocap/pose",10);

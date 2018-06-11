@@ -115,7 +115,11 @@ catkin_package(
 ###########
 
 ## Specify additional locations of head
+set(HEADERS_ src/forceest.h
+              src/ukf.h              )
 
+
+          set(SOURCES_ src/ukf.cpp  src/forceest.cpp)
 
 
 ## Your package locations should be listed before other locations
@@ -137,8 +141,8 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
- add_executable(measure src/measure.cpp)
-
+add_executable(measure src/measure.cpp ${HEADERS_} ${SOURCES_})
+add_executable(thetap src/thetap.cpp ${HEADERS_} ${SOURCES_})
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -153,7 +157,9 @@ include_directories(
  target_link_libraries(measure
    ${catkin_LIBRARIES}
  )
-
+target_link_libraries(thetap
+  ${catkin_LIBRARIES}
+)
 #############
 ## Install ##
 #############
