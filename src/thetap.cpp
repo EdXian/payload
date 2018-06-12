@@ -4,31 +4,26 @@
 #include "forceest.h"
 #include "geometry_msgs/PoseStamped.h"
 #include <tf/transform_datatypes.h>
-
-
+#include "UKF/output.h"
+#include "geometry_msgs/Point.h"
 
 
 sensor_msgs::Imu imu_data;
-double imu_roll , imu_pitch , imu_yaw;
+
 geometry_msgs::PoseStamped mocap_pose;
+Eigen::Vector3d a_I , a_B;
+UKF::output  ukf_data;
 double fx ,fy ,fz;
 double mocap_roll , mocap_yaw , mocap_pitch;
-
 double theta_p;
 double omega_p;
 bool flag = true;
 double yaw_bias ;
-
+double imu_roll , imu_pitch , imu_yaw;
 double x_bias , y_bias , z_bias;
-
-
 double a_x_I,a_y_I,a_z_I;
 double a_x_B,a_y_B,a_z_B;
-Eigen::Vector3d a_I , a_B;
-
 bool imu_flag=true;
-
-
 double w,x,y,z;
 
 Eigen::Matrix3d R_B_I ; //body frame to inertial frame matrix
@@ -72,6 +67,10 @@ void imu_cb(const sensor_msgs::Imu::ConstPtr& msg){
 }
 
 
+void ukf_cb(const UKF::output::ConstPtr& msg){
+  ukf_data = *msg;
+}
+
 
 void mocap_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){
    mocap_pose= *msg;
@@ -100,10 +99,7 @@ double cr = cos(imu_roll) , cp = cos(imu_pitch) , cy = cos(mocap_yaw);
 double sr = sin(imu_roll) , sp = sin(imu_pitch) , sy = sin(mocap_yaw);
 
 Eigen::Matrix3d Rx ,Ry,Rz ,Q;
-//R_B_I.setZero(3,3);
-//Rx.setZero(3,3);
-//Ry.setZero(3,3);
-//Rz.setZero(3,3);
+
 Rz <<
       cy,-1*sy,0,
       sy,cy,0,
@@ -124,7 +120,7 @@ Q<< w*w+x*x-y*y-z*z  , 2*x*y-2*w*z ,2*x*z+2*w*y,
 a_I = Q*a_B;
 a_x_I = a_I[0];
 a_y_I = a_I[1];
-a_z_I = a_I[2];
+a_z_I = a_I[2] - 9.81;
 //std::cout <<"acc" <<std::endl<<a_I<<std::endl;
 
 
@@ -157,8 +153,14 @@ int main(int argc, char **argv)
 
 
 
-  ros::Subscriber imu_sub = nh.subscribe("/mavros/imu/data" , 10, imu_cb);
-  ros::Subscriber mocap_sub = nh.subscribe("/vrpn_client_node/RigidBody2/pose" , 10 , mocap_cb);
+  ros::Subscriber imu_sub = nh.subscribe("/mavros/imu/data" , 2, imu_cb);
+  ros::Subscriber mocap_sub = nh.subscribe("/vrpn_client_node/RigidBody2/pose" , 2 , mocap_cb);
+  ros::Subscriber  ukf_sub = nh.subscribe("/output",2,ukf_cb);
+
+  ros::Publisher mtheta_p_pub = nh.advertise<geometry_msgs::Point>("theta_p",10);
+  geometry_msgs::Point theta;
+
+
   ros::Rate loop_rate(30);
 
 
@@ -166,26 +168,62 @@ int main(int argc, char **argv)
   Eigen::MatrixXd mnoise;
   mnoise.setZero(measurementsize,measurementsize);
   mnoise   = 3e-3*Eigen::MatrixXd::Identity(measurementsize , measurementsize);
+
+  mnoise(mthetap,mthetap) =  2e-3;
+  mnoise(momegap,momegap) =  2e-3;
+  mnoise(mac_x,mac_x) =  3e-3;
+  mnoise(mac_z,mac_z) =  3e-3;
+  mnoise(mFF_x,mFF_x) =  3e-3;
+  mnoise(mFF_z,mFF_z) =  3e-3;
+
+
+  std::cout<< "mnoise"<<std::endl;
+  std::cout<<mnoise<<std::endl;
+
   forceest1.set_measurement_noise(mnoise);
 
 
 
   Eigen::MatrixXd pnoise;
   pnoise.setZero(statesize,statesize);
-  pnoise   = 3e-3*Eigen::MatrixXd::Identity(statesize , statesize);
+  //pnoise   = 5e-2*Eigen::MatrixXd::Identity(statesize , statesize);
+
+  pnoise(thetap , thetap) = 1e-3;
+  pnoise(omegap , omegap) = 1e-3;
+  pnoise(ac_x , ac_x) = 4e-3;
+  pnoise(ac_z , ac_z) = 4e-3;
+  pnoise(ap_x , ap_x) = 4e-3;
+  pnoise(ap_z , ap_z) = 4e-3;
+
+  pnoise(FF_x , FF_x) = 3e-3;
+  pnoise(FF_z , FF_z) = 3e-3;
+  pnoise(FL_x , FL_x) = 1e-2;
+  pnoise(FL_z , FL_z) = 1e-2;
+
+  std::cout<< "pnoise"<<std::endl;
+  std::cout<<pnoise<<std::endl;
+
   forceest1.set_process_noise(pnoise);
 
 
   Eigen::MatrixXd measurement_matrix;
-  measurement_matrix.setZero(6,8);
-  measurement_matrix << 1,0,0,0,0,0,0,0,
-                        0,1,0,0,0,0,0,0,
-                        0,0,1,0,0,0,0,0,
-                        0,0,0,1,0,0,0,0,
-                        0,0,0,0,1,0,0,0,
-                        0,0,0,0,0,1,0,0;
-  forceest1.set_measurement_matrix(measurement_matrix);
+  measurement_matrix.setZero(measurementsize,statesize);
+//  measurement_matrix << 1,0,0,0,0,0,0,0,
+//                        0,1,0,0,0,0,0,0,
+//                        0,0,1,0,0,0,0,0,
+//                        0,0,0,1,0,0,0,0,
+//                        0,0,0,0,1,0,0,0,
+//                        0,0,0,0,0,1,0,0;
 
+  measurement_matrix(mthetap , mthetap) =1;
+  measurement_matrix(momegap , momegap) =1;
+  measurement_matrix(mac_x , mac_x) =1;
+  measurement_matrix(mac_z , mac_z) =1;
+  measurement_matrix(4 , 6) =1;
+  measurement_matrix(5 , 7) =1;
+
+  forceest1.set_measurement_matrix(measurement_matrix);
+  std::cout <<"measurement_matrix"<<std::endl<<measurement_matrix<<std::endl;
   forceest1.dt = 0.033;
 
 
@@ -195,15 +233,28 @@ int main(int argc, char **argv)
     Eigen::VectorXd measure;
 
     measure.setZero(6);
-    measure << theta_p , omega_p ,a_x_I,a_z_I ,0.1,0.1 ;
+
+    measure << theta_p , omega_p ,a_x_I,-1*a_z_I ,-ukf_data.force.x,-ukf_data.force.z ;
+
+//  std::cout<<"---------"<<std::endl;
+//  std::cout<< "theta_p     "<<theta_p<<std::endl;
+//  std::cout << "omega_p    "<<omega_p<<std::endl;
+//  std::cout << "a_x_I    "<<a_x_I<<std::endl;
+//  std::cout << "a_z_I    "<<a_z_I<<std::endl;
+//  std::cout << "force.x    "<<ukf_data.force.x<<std::endl;
+//  std::cout << "force.z    "<<ukf_data.force.z<<std::endl;
 
     forceest1.correct(measure);
 
+    theta.x  =  forceest1.x[FF_z];
+    theta.y  =  forceest1.x[FL_z];
+    mtheta_p_pub.publish(theta);
 
-    //std::cout<<"---------"<<std::endl<< forceest1.x <<std::endl;
-    loop_rate.sleep();
+  std::cout<<"---------"<<std::endl<< forceest1.x <<std::endl;
+//    std::cout << atan2(ukf_data.force.z ,ukf_data.force.x )* 57<<std::endl;
+
     ros::spinOnce();
-
+   loop_rate.sleep();
   }
 
 

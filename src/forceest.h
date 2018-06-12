@@ -12,6 +12,8 @@ enum state{
     omegap,
     ac_x,
     ac_z,
+    ap_x,
+    ap_z,
     FF_x,
     FF_z,
     FL_x,
