@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   geometry_msgs
   sensor_msgs
-  ukf
+  UKF
 )
 
 ## System dependencies are found with CMake's conventions
@@ -116,10 +116,12 @@ catkin_package(
 
 ## Specify additional locations of head
 set(HEADERS_ src/forceest.h
-              src/ukf.h              )
+              src/ukf.h     src/lpf.h
+              src/kalmanfilter.h  src/lpf2.h)
 
 
-          set(SOURCES_ src/ukf.cpp  src/forceest.cpp)
+          set(SOURCES_ src/ukf.cpp  src/forceest.cpp src/lpf.cpp
+                src/kalmanfilter.cpp  src/lpf2.cpp)
 
 
 ## Your package locations should be listed before other locations
@@ -141,8 +143,10 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(measure src/measure.cpp ${HEADERS_} ${SOURCES_})
+#add_executable(measure src/measure.cpp ${HEADERS_} ${SOURCES_})
 add_executable(thetap src/thetap.cpp ${HEADERS_} ${SOURCES_})
+add_executable(mocap src/mocap.cpp ${HEADERS_} ${SOURCES_})
+add_executable(check src/check.cpp ${HEADERS_} ${SOURCES_})
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -154,10 +158,16 @@ add_executable(thetap src/thetap.cpp ${HEADERS_} ${SOURCES_})
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 # Specify libraries to link a library or executable target against
- target_link_libraries(measure
-   ${catkin_LIBRARIES}
- )
+ #target_link_libraries(measure
+ #  ${catkin_LIBRARIES}
+ #)
 target_link_libraries(thetap
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(mocap
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(check
   ${catkin_LIBRARIES}
 )
 #############

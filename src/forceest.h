@@ -2,7 +2,7 @@
 #define FORCEEST_H
 #include "ukf.h"
 #include "iostream"
-
+#include "lpf2.h"
 
 
 
@@ -36,11 +36,14 @@ class forceest : public ukf
 {
 
 public:
+  lpf2 *lpf;
 forceest(int x, int y) : ukf(x,y){
-
+  last_omega_p = 0;
+    lpf = new lpf2(6,0.02);
 }
-Eigen::MatrixXd dynamics(Eigen::MatrixXd sigma_state);
 
+Eigen::MatrixXd dynamics(Eigen::MatrixXd sigma_state);
+double last_omega_p ;
 private:
 
 
