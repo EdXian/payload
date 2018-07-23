@@ -2,15 +2,23 @@
 #include "geometry_msgs/Point.h"
 
 
+//#define interval
 
-
-double upper_bound = 1.2;
-double lower_bound = -1.2;
+double upper_bound = 1.5;
+double lower_bound = -1.5;
 double zero = 0;
 int current_state=0;
 int last_state=0;
 int controlloer_state;
 int score;
+double time_threshold = 0.1;
+enum zone{
+    positive_zone = 5,
+    zero_zone = 0 ,
+    negative_zone = -5
+};
+
+
 enum control_state{
   positive_engaged = 5,
   disengaged = 0,
@@ -36,7 +44,7 @@ int main(int argc, char **argv)
 
   double time =ros::Time::now().toSec();
   double lastime =time;
-
+  double last_update_time = 0;
   while(ros::ok()){
 
 
@@ -44,49 +52,55 @@ int main(int argc, char **argv)
 
     last_state = current_state;
     if(leader_force.x > upper_bound){
-      current_state = positive_engaged ;
+      current_state = positive_zone;
     }else if(leader_force.x < lower_bound){
-      current_state = negative_engaged ;
+      current_state = negative_zone ;
     }else{
-      current_state = disengaged;
+      current_state = zero_zone;
     }
 
 #ifdef interval
-    if((current_state == positive_engaged) && (last_state ==  disengaged)){
-      controlloer_state = 5;
-
-
-    }
-    if((controlloer_state == 5) && (leader_force.x<zero)){
-      controlloer_state = 0;
-
-    }
-    if((current_state == negative_engaged) && (last_state ==  disengaged)){
-      controlloer_state = -5;
+     lastime = time;
+    time = ros::Time::now().toSec();
+    double dt = time - last_update_time;
+    if((current_state == positive_zone) && (last_state ==  zero_zone)   ){
+      controlloer_state = positive_engaged;
+      last_update_time = time;
 
     }
-    if((controlloer_state == -5) && (leader_force.x>zero)){
-      controlloer_state = 0;
-
+    if((controlloer_state == positive_zone) && (leader_force.x<zero) && (dt>time_threshold )){
+      controlloer_state = disengaged;
+      last_update_time = time;
+    }
+    if((current_state == negative_zone) && (last_state ==  zero_zone)){
+      controlloer_state = negative_engaged;
+      last_update_time = time;
+    }
+    if((controlloer_state == negative_zone) && (leader_force.x>zero)&& (dt>time_threshold )){
+      controlloer_state = disengaged;
+      last_update_time = time;
     }
 #else
-    if((current_state == positive_engaged) && (last_state ==  disengaged)){
-      controlloer_state = 5;
+    lastime = time;
+   time = ros::Time::now().toSec();
+   double dt = time - last_update_time;
+   if((current_state == positive_zone) && (last_state ==  zero_zone)   ){
+     controlloer_state = positive_engaged;
+     last_update_time = time;
 
-
-    }
-    if((controlloer_state == 5) && (leader_force.x<zero)){
-      controlloer_state = 0;
-
-    }
-    if((current_state == negative_engaged) && (last_state ==  disengaged)){
-      controlloer_state = -5;
-
-    }
-    if((controlloer_state == -5) && (leader_force.x>zero)){
-      controlloer_state = 0;
-
-    }
+   }
+   if((controlloer_state == positive_engaged) && (leader_force.x<zero) ){
+     controlloer_state = disengaged;
+     last_update_time = time;
+   }
+   if((current_state == negative_zone) && (last_state ==  zero_zone)){
+     controlloer_state = negative_engaged;
+     last_update_time = time;
+   }
+   if((controlloer_state == negative_engaged) && (leader_force.x>zero)){
+     controlloer_state = disengaged;
+     last_update_time = time;
+   }
 #endif
 
     output.x = controlloer_state;
