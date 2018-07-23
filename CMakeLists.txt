@@ -145,6 +145,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 #add_executable(measure src/measure.cpp ${HEADERS_} ${SOURCES_})
 add_executable(thetap src/thetap.cpp ${HEADERS_} ${SOURCES_})
+add_executable(trigger src/trigger.cpp ${HEADERS_} ${SOURCES_})
 add_executable(mocap src/mocap.cpp ${HEADERS_} ${SOURCES_})
 add_executable(check src/check.cpp ${HEADERS_} ${SOURCES_})
 ## Rename C++ executable without prefix
@@ -161,6 +162,9 @@ add_executable(check src/check.cpp ${HEADERS_} ${SOURCES_})
  #target_link_libraries(measure
  #  ${catkin_LIBRARIES}
  #)
+ target_link_libraries(trigger
+   ${catkin_LIBRARIES}
+ )
 target_link_libraries(thetap
   ${catkin_LIBRARIES}
 )
