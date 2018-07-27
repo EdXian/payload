@@ -148,6 +148,7 @@ add_executable(thetap src/thetap.cpp ${HEADERS_} ${SOURCES_})
 add_executable(trigger src/trigger.cpp ${HEADERS_} ${SOURCES_})
 add_executable(mocap src/mocap.cpp ${HEADERS_} ${SOURCES_})
 add_executable(check src/check.cpp ${HEADERS_} ${SOURCES_})
+add_executable(drone_mocap src/drone_mocap.cpp ${HEADERS_} ${SOURCES_})
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -172,6 +173,9 @@ target_link_libraries(mocap
   ${catkin_LIBRARIES}
 )
 target_link_libraries(check
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(drone_mocap
   ${catkin_LIBRARIES}
 )
 #############

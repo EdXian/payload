@@ -4,8 +4,8 @@
 
 //#define interval
 
-double upper_bound = 1.5;
-double lower_bound = -1.5;
+double upper_bound = 1.2;
+double lower_bound = -1.2;
 double zero = 0;
 int current_state=0;
 int last_state=0;
@@ -89,7 +89,7 @@ int main(int argc, char **argv)
      last_update_time = time;
 
    }
-   if((controlloer_state == positive_engaged) && (leader_force.x<zero) ){
+   if((controlloer_state == positive_engaged) && (leader_force.x<1.1) ){
      controlloer_state = disengaged;
      last_update_time = time;
    }
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
      controlloer_state = negative_engaged;
      last_update_time = time;
    }
-   if((controlloer_state == negative_engaged) && (leader_force.x>zero)){
+   if((controlloer_state == negative_engaged) && (leader_force.x>-1.1)){
      controlloer_state = disengaged;
      last_update_time = time;
    }

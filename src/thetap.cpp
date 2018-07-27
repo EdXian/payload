@@ -183,9 +183,9 @@ int main(int argc, char **argv)
 
   ros::Subscriber ukf2_sub = nh.subscribe("/leader_ukf/output",2,ukf2_cb);
   ros::Subscriber  ukf_sub = nh.subscribe("/follower_ukf/output",2,ukf_cb);
-  ros::Publisher point_pub = nh.advertise<geometry_msgs::Point>("point",10);
-  ros::Publisher mtheta_p_pub = nh.advertise<geometry_msgs::Point>("theta_p",10);
-  ros::Publisher leader_force_pub = nh.advertise<geometry_msgs::Point>("leader_force",2);
+  ros::Publisher point_pub = nh.advertise<geometry_msgs::Point>("point2",10);
+  ros::Publisher mtheta_p_pub = nh.advertise<geometry_msgs::Point>("theta_p2",10);
+  ros::Publisher leader_force_pub = nh.advertise<geometry_msgs::Point>("leader_force2",2);
   geometry_msgs::Point theta;
 
 
@@ -335,8 +335,8 @@ int main(int argc, char **argv)
 //    double apx =a_x_I +alpha*r*sin(forceest1.x[thetap]) - forceest1.x[omegap]*forceest1.x[omegap]*r *cos(forceest1.x[thetap]);
 //    double apz =a_z_I +alpha*r*cos(forceest1.x[thetap]) + forceest1.x[omegap]*forceest1.x[omegap]*r *sin(forceest1.x[thetap]);
 
-    theta.x  = forceest1.x[ap_z];//forceest1.x[FF_z];
-    theta.y  = a_obj_z; //object.angular_velocity.y;
+    theta.x  = forceest1.x[ap_x];//forceest1.x[FF_z];
+    theta.y  = a_obj_x; //object.angular_velocity.y;
 
     //theta.y  = ;//a_obj_x;// +0.4;//forceest1.x[FL_z];
     // a_obj_z;//
@@ -349,6 +349,11 @@ int main(int argc, char **argv)
 
     leader_force.x = forceest1.x[FL_x];
     leader_force.z = forceest1.x[FL_z];
+
+//    theta.x  = leader_force.x;//forceest1.x[FF_z];
+//    theta.y  = leader_force.z; //object.angular_velocity.y;
+
+
 
     leader_force_pub.publish(leader_force);
     mtheta_p_pub.publish(theta);
