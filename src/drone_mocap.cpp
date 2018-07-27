@@ -5,7 +5,7 @@ class SubscribeAndPublish
 public:
   SubscribeAndPublish()
   {
-    pub_ = n_.advertise<geometry_msgs::PoseStamped>("/drone1/mavros/vision_pose/pose", 2);
+    pub_ = n_.advertise<geometry_msgs::PoseStamped>("~/mavros/vision_pose/pose", 2);
     sub_ = n_.subscribe("/vrpn_client_node/RigidBody1/pose", 2, &SubscribeAndPublish::callback, this);
   }
 
