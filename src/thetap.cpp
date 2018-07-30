@@ -183,9 +183,9 @@ int main(int argc, char **argv)
 
   ros::Subscriber ukf2_sub = nh.subscribe("/leader_ukf/output",2,ukf2_cb);
   ros::Subscriber  ukf_sub = nh.subscribe("/follower_ukf/output",2,ukf_cb);
-  ros::Publisher point_pub = nh.advertise<geometry_msgs::Point>("point2",10);
-  ros::Publisher mtheta_p_pub = nh.advertise<geometry_msgs::Point>("theta_p2",10);
-  ros::Publisher leader_force_pub = nh.advertise<geometry_msgs::Point>("leader_force2",2);
+  ros::Publisher point_pub = nh.advertise<geometry_msgs::Point>("point",10);
+  ros::Publisher mtheta_p_pub = nh.advertise<geometry_msgs::Point>("theta_p",10);
+  ros::Publisher leader_force_pub = nh.advertise<geometry_msgs::Point>("leader_force",2);
   geometry_msgs::Point theta;
 
 
@@ -222,8 +222,8 @@ int main(int argc, char **argv)
   pnoise(omegap , omegap) = 1e-3;
   pnoise(ac_x , ac_x) = 4e-2;
   pnoise(ac_z , ac_z) = 4e-2;
-  pnoise(ap_x , ap_x) = 8e-1;
-  pnoise(ap_z , ap_z) = 1.2;
+  pnoise(ap_x , ap_x) = 4e-2;
+  pnoise(ap_z , ap_z) = 4e-2;
 
   pnoise(FF_x , FF_x) = 3e-3;
   pnoise(FF_z , FF_z) = 3e-3;
@@ -305,16 +305,6 @@ int main(int argc, char **argv)
     measure.setZero(6);
 
     measure << theta_p , omega_p ,a_x_I,a_z_I ,-ukf_data.force.x,-ukf_data.force.z ;
-
-
-
-//  std::cout<<"---------"<<std::endl;
-//  std::cout<< "theta_p     "<<theta_p<<std::endl;
-//  std::cout << "omega_p    "<<omega_p<<std::endl;
-//  std::cout << "a_x_I    "<<a_x_I<<std::endl;
-//  std::cout << "a_z_I    "<<a_z_I<<std::endl;
-//  std::cout << "force.x    "<<ukf_data.force.x<<std::endl;
-//  std::cout << "force.z    "<<ukf_data.force.z<<std::endl;
 
     if(init ){
      last_omegap_ = omega_p;
